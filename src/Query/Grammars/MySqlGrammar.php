@@ -17,6 +17,10 @@ class MySqlGrammar extends IlluminateMySqlGrammar
      */
     protected function compileFrom(Builder $query, $table)
     {
+        if (! is_string($table)) {
+            return parent::compileFrom($query, $table);
+        }
+
         // Check for cross database query to attach database name
         if (strpos($table, '<-->') !== false) {
             list($prefix, $table, $database) = explode('<-->', $table);
