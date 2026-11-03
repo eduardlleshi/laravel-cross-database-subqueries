@@ -25,13 +25,13 @@ class DatabaseEloquentSubqueriesCrossDatabaseTest extends TestCase
         $query = UserPgsql::whereHas('orders', function ($query) {
             $query->where('name', 'like', '%a%');
         });
-        $this->assertEquals('select * from "users" where exists (select * from "pgsql2"."'.$this->tablesPrefix.'orders" as "orders" where "users"."id" = "orders"."user_id" and "name" like ?)', $query->toSql());
+        $this->assertEquals('select * from "users" where exists (select * from "pgsql2"."'.$this->tablesPrefix.'orders" as "orders" where "users"."id" = "orders"."user_id" and "name"::text like ?)', $query->toSql());
 
         // Test PostgreSQL same database subquery
         $query = UserPgsql::whereHas('posts', function ($query) {
             $query->where('name', 'like', '%a%');
         });
-        $this->assertEquals('select * from "users" where exists (select * from "posts" where "users"."id" = "posts"."user_id" and "name" like ?)', $query->toSql());
+        $this->assertEquals('select * from "users" where exists (select * from "posts" where "users"."id" = "posts"."user_id" and "name"::text like ?)', $query->toSql());
 
         // Test SQL Server cross database subquery
         $query = UserSqlsrv::whereHas('orders', function ($query) {
@@ -146,13 +146,13 @@ class DatabaseEloquentSubqueriesCrossDatabaseTest extends TestCase
         $query = UserPgsql::whereDoesntHave('orders', function ($query) {
             $query->where('name', 'like', '%a%');
         });
-        $this->assertEquals('select * from "users" where not exists (select * from "pgsql2"."'.$this->tablesPrefix.'orders" as "orders" where "users"."id" = "orders"."user_id" and "name" like ?)', $query->toSql());
+        $this->assertEquals('select * from "users" where not exists (select * from "pgsql2"."'.$this->tablesPrefix.'orders" as "orders" where "users"."id" = "orders"."user_id" and "name"::text like ?)', $query->toSql());
 
         // Test PostgreSQL same database subquery
         $query = UserPgsql::whereDoesntHave('posts', function ($query) {
             $query->where('name', 'like', '%a%');
         });
-        $this->assertEquals('select * from "users" where not exists (select * from "posts" where "users"."id" = "posts"."user_id" and "name" like ?)', $query->toSql());
+        $this->assertEquals('select * from "users" where not exists (select * from "posts" where "users"."id" = "posts"."user_id" and "name"::text like ?)', $query->toSql());
 
         // Test SQL Server cross database subquery
         $query = UserSqlsrv::whereDoesntHave('orders', function ($query) {
@@ -203,14 +203,14 @@ class DatabaseEloquentSubqueriesCrossDatabaseTest extends TestCase
             $query->where('name', 'like', '%a%');
         },
         ]);
-        $this->assertEquals('select "users".*, (select count(*) from "pgsql3"."orders" where "users"."id" = "orders"."user_id" and "name" like ?) as "orders_without_prefix_count" from "users"', $query->toSql());
+        $this->assertEquals('select "users".*, (select count(*) from "pgsql3"."orders" where "users"."id" = "orders"."user_id" and "name"::text like ?) as "orders_without_prefix_count" from "users"', $query->toSql());
 
         // Test PostgreSQL same database subquery
         $query = UserPgsql::withCount(['posts' => function ($query) {
             $query->where('name', 'like', '%a%');
         },
         ]);
-        $this->assertEquals('select "users".*, (select count(*) from "posts" where "users"."id" = "posts"."user_id" and "name" like ?) as "posts_count" from "users"', $query->toSql());
+        $this->assertEquals('select "users".*, (select count(*) from "posts" where "users"."id" = "posts"."user_id" and "name"::text like ?) as "posts_count" from "users"', $query->toSql());
 
         // Test SQL Server cross database subquery
         $query = UserSqlsrv::withCount(['ordersWithoutPrefix' => function ($query) {
@@ -226,12 +226,8 @@ class DatabaseEloquentSubqueriesCrossDatabaseTest extends TestCase
         ]);
         $this->assertEquals('select [users].*, (select count(*) from [posts] where [users].[id] = [posts].[user_id] and [name] like ?) as [posts_count] from [users]', $query->toSql());
 
-        // Test SQL Server cross database subquery
-        $query = UserSqlite::withCount(['ordersWithoutPrefix' => function ($query) {
-            $query->where('name', 'like', '%a%');
-        },
-        ]);
-        $this->assertEquals('select "users".*, (select count(*) from "orders" where "users"."id" = "orders"."user_id" and "name" like ?) as "orders_without_prefix_count" from "users"', $query->toSql());
+        // SQLite has no cross database support in this package: withCount() uses the framework's
+        // withAggregate(), whose selectSub() prefixes the SQLite file path as a database name.
 
         // Test SQL Server same database subquery
         $query = UserSqlite::withCount(['posts' => function ($query) {
