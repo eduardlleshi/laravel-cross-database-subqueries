@@ -11,7 +11,7 @@ abstract class Model extends IlluminateModel
      *
      * @param \Illuminate\Database\Query\Builder $query
      *
-     * @return \oyvoy\Support\CrossDatabase\Eloquent\Builder|static
+     * @return \Hoyvoy\CrossDatabase\Eloquent\Builder
      */
     public function newEloquentBuilder($query)
     {
